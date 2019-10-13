@@ -75,7 +75,13 @@ def catagory():
     data = request.get_json(silent=True)
     catagory = data.get('queryResult').get('parameters')['wake_Catagory']
     if(catagory == 'Science'):
-        wakeText = "When the DNA of an organism changes and results in a new trait, it is known as a mutation" 
+        wakeText = "When the DNA of an organism changes and results in a new trait, it is known as a mutation." 
+        wakeText+= " The first person to see a live cell with a microscope was Antonie van Leeuwenhoek, in 1674." 
+        wakeText+= " Bacteria are extremely small and are made up of just one cell."
+        wakeText+= " Animals that eat plants as their primary food source are known as herbivores"
+        wakeText+= " Cats always land on their feet."
+        wakeText+= " Female sharks have thicker skins than males."
+        wakeText+= " The ocean is 8 empire state Buildings deep."
 
     elif (catagory == "News"):
         wakeText = retrievenews()
@@ -86,7 +92,12 @@ def catagory():
 
     else:
         wakeText = "Japanese square watermelons are ornamental plants and are not edible"
-
+        wakeText+= " if you spin a ball as you drop it, it flies." 
+        wakeText+= " most lipsticks contain fish scales."
+        wakeText+= " recycling one glass jar saves enough energy to operate a television for three hours."
+        wakeText+= " Leonardo Da Vinci invented scissors."
+        wakeText+= " Horses can’t vomit."
+        wakeText+= " slugs have four noses"
     
     return  wakeText
 
@@ -132,13 +143,13 @@ def webhook():
             time.sleep(30)
             if(checkTime(timeX) == True):
                 break
+    
+    if(motivation == True):
+        playsound.playsound('inspire.mp3', True)
+        return "done"
     else:
-        if(motivation == True):
-            playsound.playsound('inspire.mp3', True)
-            return fact
-
-    playsound.playsound('alarm.mp3',True)
-    return fact
+        playsound.playsound('alarm.mp3',True)
+        return fact
             
     
 
