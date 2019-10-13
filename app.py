@@ -4,12 +4,61 @@ from datetime import datetime
 import time
 from gtts import gTTS
 import playsound
+import requests as req
 import random
 app = Flask(__name__)
 
 timeForm = ''
 timeX = ''
 wakeText = '' 
+myAPIkey = '845346ee7c0b422bbf655b80995739ae'
+sleepT = False
+motivation = False 
+def retrievenews():
+
+    # sourcing
+    sourcelist = ["techradar", "buzzfeed", "cnn", "hacker-news", "the-huffington-post", "time",]
+    randomsource = sourcelist[random.randint(0, len(sourcelist) - 1)]
+
+    """
+    Addables / Parameters to put into link(add a ? or & ):
+    category = categories(business, etc)
+    sources = sourceInFormat
+    q = subject
+    """
+
+    main_url = " https://newsapi.org/v1/articles?source=" + randomsource + "&sortBy=top&apiKey="+ myAPIkey
+
+    # fetching data in json format
+    open_webpage = req.get(main_url).json()
+
+    # getting all articles in a string article
+    # retrieves the articles from the full json set
+    articlecollection = open_webpage["articles"]
+
+    # empty list which will
+    # contain all trending news
+    results = []
+
+    # in the collection of articles in JSON format collect the values linked to the key "title"
+    for titleFinder in articlecollection:
+        results.append(titleFinder["title"])
+
+    if (randomsource == "cnn"):
+        resultForSpeech = ("Source: " + "c n n" + "\n")
+    else:
+        resultForSpeech = ("Source: " + randomsource + "\n")
+
+    # print out all the results in a loop
+    for x in range(len(results)):
+        # printing all trending news
+        # print(x + 1, ")", results[x])
+        resultForSpeech = resultForSpeech + (results[x]) + "\n"
+
+
+    return resultForSpeech
+
+
 
 def getTime():
     data = request.get_json(silent=True)
@@ -28,8 +77,13 @@ def catagory():
     if(catagory == 'Science'):
         wakeText = "When the DNA of an organism changes and results in a new trait, it is known as a mutation" 
 
-    elif (catagory == "New"):
-        
+    elif (catagory == "News"):
+        wakeText = retrievenews()
+    elif(catagory == 'Motivational'):
+        global motivation
+        motivation = True
+        wakeText = "N/a"
+
     else:
         wakeText = "Japanese square watermelons are ornamental plants and are not edible"
 
@@ -53,10 +107,18 @@ def checkTime(timeC):
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
+    global timeX 
+    
+    global sleepT
     data = request.get_json(silent=True)
+    if(data.get('queryResult')['action'] == 'wake_choice'):
+        if(data.get('queryResult').get('parameters')['wakeChoice'] == "Alarm"):
+            return {"fulfillmentText": "Great, you want an Alarm. What time would you like your wake up call?"}
+        else:
+            sleepT = True
+            return {"fulfillmentText": "Awesome, you choose a sleep timer. What is the category you would like?"}
     if(data.get('queryResult')['action'] == 'user_time'):
         x = make_response(jsonify(getTime()))
-        global timeX 
         timeX  = timeForm
         timeX  = datetime.strptime(timeX, "%H:%M:%S")
         return x 
@@ -64,12 +126,17 @@ def webhook():
         fact = catagory()
         alarm = gTTS(fact)
         alarm.save('alarm.mp3')
-        print(checkTime(timeX))
+        print(sleepT)
+    if(sleepT == False):
         while(checkTime(timeX) == False):
-            
             time.sleep(30)
             if(checkTime(timeX) == True):
                 break
+    else:
+        if(motivation == True):
+            playsound.playsound('inspire.mp3', True)
+            return fact
+
     playsound.playsound('alarm.mp3',True)
     return fact
             
